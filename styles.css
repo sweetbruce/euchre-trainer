@@ -1178,28 +1178,43 @@ h1 {
 
 .celebration {
   display: grid;
-  gap: 3px;
-  margin: 16px 0;
-  padding: 14px 16px;
-  border: 1px solid rgba(185, 136, 46, 0.42);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin: 18px 0;
+  padding: 20px;
+  border: 2px solid rgba(47, 119, 115, 0.46);
   border-radius: 8px;
   background:
-    linear-gradient(90deg, rgba(185, 136, 46, 0.16), rgba(47, 119, 115, 0.1)),
+    linear-gradient(90deg, rgba(47, 119, 115, 0.18), rgba(47, 119, 115, 0.08)),
     rgba(255, 253, 247, 0.78);
   color: var(--ink);
-  box-shadow: 4px 4px 0 rgba(36, 27, 32, 0.09);
+  box-shadow: 6px 6px 0 rgba(47, 119, 115, 0.12);
+}
+
+.celebration-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .celebration strong {
-  color: var(--rose);
+  color: #245b57;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.22rem;
+  font-size: clamp(1.6rem, 4vw, 2.35rem);
   line-height: 1.1;
 }
 
 .celebration span {
-  color: var(--muted);
+  color: #245b57;
+  font-size: 1.08rem;
   font-weight: 750;
+}
+
+.celebration-next {
+  min-width: 150px;
+  background: #245b57;
+  border-color: #245b57;
 }
 
 .actions {
@@ -1568,7 +1583,20 @@ h1 {
   }
 
   .celebration strong {
-    font-size: 1.08rem;
+    font-size: 1.55rem;
+  }
+
+  .celebration {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .celebration span {
+    font-size: 1rem;
+  }
+
+  .celebration-next {
+    width: 100%;
   }
 
   .playing-card {

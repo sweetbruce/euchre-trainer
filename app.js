@@ -908,7 +908,6 @@ let state = loadState();
 let selectedAnswer = null;
 let feedback = null;
 let celebrating = false;
-let advanceTimer = null;
 let appMode = "lessons";
 let practiceState = {
   index: 0,
@@ -943,22 +942,12 @@ function currentLesson() {
 }
 
 function clearAdvanceTimer() {
-  if (advanceTimer) {
-    clearTimeout(advanceTimer);
-    advanceTimer = null;
-  }
   celebrating = false;
 }
 
-function scheduleAdvance(callback) {
-  clearAdvanceTimer();
+function showCelebration() {
   celebrating = true;
   render();
-  advanceTimer = setTimeout(() => {
-    advanceTimer = null;
-    celebrating = false;
-    callback();
-  }, 1450);
 }
 
 function selectLesson(id) {
@@ -984,11 +973,7 @@ function selectAnswer(index) {
     state.mastered[lesson.id] = true;
     feedback = { type: "good", text: lesson.quiz.good };
     saveState();
-    scheduleAdvance(() => {
-      const currentIndex = lessonIndex(lesson.id);
-      if (currentIndex === lessons.length - 1) startPractice();
-      else goNext();
-    });
+    showCelebration();
     return;
   } else {
     state.mastered[lesson.id] = false;
@@ -1076,7 +1061,7 @@ function selectPracticeCard(rank, suit) {
       type: "good",
       text: scenario.explanation
     };
-    scheduleAdvance(nextPracticeScenario);
+    showCelebration();
     return;
   } else {
     practiceState.feedback = {
@@ -1098,7 +1083,7 @@ function selectPracticeTrump(suit) {
       type: "good",
       text: scenario.explanation
     };
-    scheduleAdvance(nextPracticeScenario);
+    showCelebration();
     return;
   } else if (suit === scenario.passedSuit) {
     practiceState.feedback = {
@@ -1560,13 +1545,13 @@ function renderPractice() {
             `).join("")}
           </section>
           ${isCallPractice ? renderTrumpCallOptions(scenario) : ""}
-          ${celebrating ? renderCelebration("Nice work", "Next one coming up...") : ""}
+          ${celebrating ? renderCelebration("Nice work", "You got it. Take a breath, then try the next one.", practiceState.index === practiceScenarios.length - 1 ? "Restart Practice" : "Next Practice Trick", "nextPracticeScenario()") : ""}
           <div class="feedback ${feedback ? feedback.type : ""}">
             ${feedback ? colorizeRedCards(feedback.text) : isCallPractice ? "Choose the trump suit that best fits your hand. The turned-down suit is not available." : "Choose from your hand. The feedback will coach the decision after you try."}
           </div>
           <div class="actions">
-            <button class="primary-button" onclick="nextPracticeScenario()" ${completed && !celebrating ? "" : "disabled"}>${celebrating ? "Moving On..." : practiceState.index === practiceScenarios.length - 1 ? "Restart Practice" : "Next Practice Trick"}</button>
-            <button class="secondary-button" onclick="backToLessons()" ${celebrating ? "disabled" : ""}>Back To Lessons</button>
+            <button class="primary-button" onclick="nextPracticeScenario()" ${completed && !celebrating ? "" : "disabled"}>${practiceState.index === practiceScenarios.length - 1 ? "Restart Practice" : "Next Practice Trick"}</button>
+            <button class="secondary-button" onclick="backToLessons()">Back To Lessons</button>
           </div>
         </main>
       </div>
@@ -1574,11 +1559,14 @@ function renderPractice() {
   `;
 }
 
-function renderCelebration(title, message) {
+function renderCelebration(title, message, actionLabel, action) {
   return `
     <div class="celebration" role="status" aria-live="polite">
-      <strong>${title}</strong>
-      <span>${message}</span>
+      <div class="celebration-copy">
+        <strong>✅ ${title}</strong>
+        <span>${message}</span>
+      </div>
+      <button class="primary-button celebration-next" onclick="${action}">${actionLabel}</button>
     </div>
   `;
 }
@@ -1689,16 +1677,16 @@ function renderLesson(lesson) {
             `;
           }).join("")}
         </div>
+        ${celebrating ? renderCelebration("Correct", isLastLesson ? "Great work. You are ready for practice hands." : "Nice job. The next concept is ready when you are.", isLastLesson ? "Start Practice" : "Next Lesson", isLastLesson ? "startPractice()" : "goNext()") : ""}
         <div class="feedback ${feedback ? feedback.type : ""}">
           ${feedback ? colorizeRedCards(feedback.text) : "Pick an answer when you feel ready. You can revisit this lesson as often as needed."}
         </div>
-        ${celebrating ? renderCelebration("Got it", isLastLesson ? "Practice hands are next..." : "Next lesson coming up...") : ""}
         <div class="actions">
           <button class="primary-button" onclick="${isLastLesson ? "startPractice()" : "goNext()"}" ${(canContinue || canStartPractice) && !celebrating ? "" : "disabled"}>
-            ${celebrating ? "Moving On..." : isLastLesson ? "All Set" : "Continue"}
+            ${isLastLesson ? "All Set" : "Continue"}
           </button>
-          <button class="secondary-button" onclick="revisit()" ${celebrating ? "disabled" : ""}>Revisit Basics</button>
-          <button class="secondary-button" onclick="resetProgress()" ${celebrating ? "disabled" : ""}>Reset</button>
+          <button class="secondary-button" onclick="revisit()">Revisit Basics</button>
+          <button class="secondary-button" onclick="resetProgress()">Reset</button>
           <span class="mastery">${mastered ? "✓ Concept comfortable" : "○ Keep practicing"} · ${attempts} ${attempts === 1 ? "try" : "tries"}</span>
         </div>
         ${
