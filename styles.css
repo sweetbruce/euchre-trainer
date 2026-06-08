@@ -1151,23 +1151,55 @@ h1 {
 .feedback {
   min-height: 70px;
   margin: 16px 0;
-  padding: 14px;
+  padding: 16px 18px;
   border: 1px solid var(--line);
+  border-left: 5px solid rgba(93, 75, 130, 0.34);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.62);
   color: var(--muted);
-  line-height: 1.45;
+  font-size: 1.06rem;
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
 .feedback.good {
   color: #245b57;
   border-color: rgba(47, 119, 115, 0.38);
+  border-left-color: var(--teal);
+  background: rgba(47, 119, 115, 0.1);
 }
 
 .feedback.retry {
   color: #874052;
   border-color: rgba(181, 74, 98, 0.38);
+  border-left-color: var(--rose);
+  background: rgba(181, 74, 98, 0.08);
+}
+
+.celebration {
+  display: grid;
+  gap: 3px;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(185, 136, 46, 0.42);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(185, 136, 46, 0.16), rgba(47, 119, 115, 0.1)),
+    rgba(255, 253, 247, 0.78);
+  color: var(--ink);
+  box-shadow: 4px 4px 0 rgba(36, 27, 32, 0.09);
+}
+
+.celebration strong {
+  color: var(--rose);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.22rem;
+  line-height: 1.1;
+}
+
+.celebration span {
+  color: var(--muted);
+  font-weight: 750;
 }
 
 .actions {
@@ -1353,15 +1385,6 @@ h1 {
   z-index: 5;
 }
 
-.practice-card-choice.legal {
-  border-color: rgba(47, 119, 115, 0.5);
-  box-shadow: 0 0 0 3px rgba(47, 119, 115, 0.12);
-}
-
-.practice-card-choice.illegal {
-  opacity: 0.46;
-}
-
 .practice-card-choice.selected {
   background: rgba(181, 74, 98, 0.1);
   border-color: var(--rose);
@@ -1535,9 +1558,17 @@ h1 {
 
   .coach-note,
   .step,
-  .quiz-question,
-  .feedback {
+  .quiz-question {
     font-size: 0.96rem;
+  }
+
+  .feedback {
+    font-size: 1rem;
+    padding: 14px 15px;
+  }
+
+  .celebration strong {
+    font-size: 1.08rem;
   }
 
   .playing-card {

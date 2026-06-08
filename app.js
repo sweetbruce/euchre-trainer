@@ -20,7 +20,7 @@ const practiceScenarios = [
     title: "Practice 1",
     prompt: "Clubs were led, and hearts are trump. Choose a legal card from your hand.",
     trump: "hearts",
-    dealer: "left-opponent",
+    dealer: "you",
     turn: "you",
     ledSuit: "clubs",
     order: ["left-opponent", "partner", "right-opponent", "you"],
@@ -44,7 +44,7 @@ const practiceScenarios = [
     title: "Practice 2",
     prompt: "Hearts are trump. Which card from your hand can beat the A&hearts;?",
     trump: "hearts",
-    dealer: "partner",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "hearts",
     order: ["partner", "right-opponent", "you", "left-opponent"],
@@ -55,8 +55,8 @@ const practiceScenarios = [
       "left-opponent": [["10", "hearts"], ["J", "clubs"], ["A", "diamonds"], ["K", "diamonds"], ["9", "spades"]]
     },
     plays: [
-      { player: "right-opponent", card: ["A", "hearts"] },
-      { player: "partner", card: ["K", "hearts"] }
+      { player: "partner", card: ["K", "hearts"] },
+      { player: "right-opponent", card: ["A", "hearts"] }
     ],
     answer: ["J", "diamonds"],
     winner: "you",
@@ -67,7 +67,7 @@ const practiceScenarios = [
     title: "Practice 3",
     prompt: "Spades are trump. Clubs were led. Choose the card you must play.",
     trump: "spades",
-    dealer: "right-opponent",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "clubs",
     hands: {
@@ -77,8 +77,8 @@ const practiceScenarios = [
       "left-opponent": [["10", "clubs"], ["A", "spades"], ["J", "clubs"], ["Q", "clubs"], ["9", "hearts"]]
     },
     plays: [
-      { player: "right-opponent", card: ["A", "clubs"] },
-      { player: "partner", card: ["K", "clubs"] }
+      { player: "partner", card: ["K", "clubs"] },
+      { player: "right-opponent", card: ["A", "clubs"] }
     ],
     answer: ["9", "clubs"],
     winner: "right-opponent",
@@ -89,7 +89,7 @@ const practiceScenarios = [
     title: "Practice 4",
     prompt: "Diamonds are trump. Spades were led. You have no spades. Choose a trump card.",
     trump: "diamonds",
-    dealer: "partner",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "spades",
     hands: {
@@ -99,8 +99,8 @@ const practiceScenarios = [
       "left-opponent": [["Q", "spades"], ["A", "diamonds"], ["J", "hearts"], ["K", "diamonds"], ["9", "hearts"]]
     },
     plays: [
-      { player: "right-opponent", card: ["A", "spades"] },
-      { player: "partner", card: ["K", "spades"] }
+      { player: "partner", card: ["K", "spades"] },
+      { player: "right-opponent", card: ["A", "spades"] }
     ],
     answer: ["9", "diamonds"],
     winner: "you",
@@ -111,7 +111,7 @@ const practiceScenarios = [
     title: "Practice 5",
     prompt: "Clubs are trump. Clubs were led. Choose the right bower (best card).",
     trump: "clubs",
-    dealer: "you",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "clubs",
     hands: {
@@ -155,7 +155,7 @@ const practiceScenarios = [
     title: "Practice 7",
     prompt: "Hearts are trump. Diamonds were led. Remember that J&diams; is not a diamond now.",
     trump: "hearts",
-    dealer: "right-opponent",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "diamonds",
     hands: {
@@ -165,8 +165,8 @@ const practiceScenarios = [
       "left-opponent": [["Q", "diamonds"], ["A", "hearts"], ["J", "hearts"], ["10", "clubs"], ["9", "hearts"]]
     },
     plays: [
-      { player: "right-opponent", card: ["K", "diamonds"] },
-      { player: "partner", card: ["9", "diamonds"] }
+      { player: "partner", card: ["9", "diamonds"] },
+      { player: "right-opponent", card: ["K", "diamonds"] }
     ],
     answer: ["J", "diamonds"],
     winner: "you",
@@ -177,7 +177,7 @@ const practiceScenarios = [
     title: "Practice 8",
     prompt: "No trump has been played. Hearts were led. Choose your highest heart.",
     trump: "spades",
-    dealer: "partner",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "hearts",
     hands: {
@@ -199,7 +199,7 @@ const practiceScenarios = [
     title: "Practice 9",
     prompt: "Spades are trump. Your partner is winning with A&clubs;. You have a club, so follow clubs.",
     trump: "spades",
-    dealer: "you",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "clubs",
     hands: {
@@ -221,7 +221,7 @@ const practiceScenarios = [
     title: "Practice 10",
     prompt: "Diamonds are trump. Hearts were led. You have no hearts, so play a trump card.",
     trump: "diamonds",
-    dealer: "left-opponent",
+    dealer: "you",
     turn: "you",
     ledSuit: "hearts",
     hands: {
@@ -244,7 +244,7 @@ const practiceScenarios = [
     title: "Practice 11",
     prompt: "Clubs are trump. Spades were led. J&spades; counts as clubs, so choose your spade.",
     trump: "clubs",
-    dealer: "partner",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "spades",
     hands: {
@@ -266,7 +266,7 @@ const practiceScenarios = [
     title: "Practice 12",
     prompt: "Hearts are trump. Trump was led. Choose your strongest trump.",
     trump: "hearts",
-    dealer: "right-opponent",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "hearts",
     hands: {
@@ -276,8 +276,8 @@ const practiceScenarios = [
       "left-opponent": [["K", "hearts"], ["A", "diamonds"], ["Q", "clubs"], ["10", "clubs"], ["9", "spades"]]
     },
     plays: [
-      { player: "right-opponent", card: ["A", "hearts"] },
-      { player: "partner", card: ["10", "hearts"] }
+      { player: "partner", card: ["10", "hearts"] },
+      { player: "right-opponent", card: ["A", "hearts"] }
     ],
     answer: ["J", "hearts"],
     winner: "you",
@@ -288,7 +288,7 @@ const practiceScenarios = [
     title: "Practice 13",
     prompt: "Spades are trump. Diamonds were led. You have diamonds, so you must follow diamonds.",
     trump: "spades",
-    dealer: "left-opponent",
+    dealer: "you",
     turn: "you",
     ledSuit: "diamonds",
     hands: {
@@ -311,7 +311,7 @@ const practiceScenarios = [
     title: "Practice 14",
     prompt: "Clubs are trump. You have no hearts after hearts were led. Your partner is winning with A&hearts;. Save trump and throw off.",
     trump: "clubs",
-    dealer: "you",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "hearts",
     hands: {
@@ -333,7 +333,7 @@ const practiceScenarios = [
     title: "Practice 15",
     prompt: "Diamonds are trump. Clubs were led. Choose your club.",
     trump: "diamonds",
-    dealer: "partner",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "clubs",
     hands: {
@@ -355,7 +355,7 @@ const practiceScenarios = [
     title: "Practice 16",
     prompt: "Hearts are trump. You have no clubs after clubs were led. Your partner is winning with A&clubs;. Save trump and throw off.",
     trump: "hearts",
-    dealer: "right-opponent",
+    dealer: "left-opponent",
     turn: "you",
     ledSuit: "clubs",
     hands: {
@@ -365,8 +365,8 @@ const practiceScenarios = [
       "left-opponent": [["Q", "clubs"], ["A", "hearts"], ["J", "hearts"], ["10", "clubs"], ["9", "spades"]]
     },
     plays: [
-      { player: "right-opponent", card: ["K", "clubs"] },
-      { player: "partner", card: ["A", "clubs"] }
+      { player: "partner", card: ["A", "clubs"] },
+      { player: "right-opponent", card: ["K", "clubs"] }
     ],
     answer: ["10", "diamonds"],
     winner: "partner",
@@ -907,6 +907,8 @@ function loadState() {
 let state = loadState();
 let selectedAnswer = null;
 let feedback = null;
+let celebrating = false;
+let advanceTimer = null;
 let appMode = "lessons";
 let practiceState = {
   index: 0,
@@ -940,7 +942,27 @@ function currentLesson() {
   return lessons.find((lesson) => lesson.id === state.current) || lessons[0];
 }
 
+function clearAdvanceTimer() {
+  if (advanceTimer) {
+    clearTimeout(advanceTimer);
+    advanceTimer = null;
+  }
+  celebrating = false;
+}
+
+function scheduleAdvance(callback) {
+  clearAdvanceTimer();
+  celebrating = true;
+  render();
+  advanceTimer = setTimeout(() => {
+    advanceTimer = null;
+    celebrating = false;
+    callback();
+  }, 1450);
+}
+
 function selectLesson(id) {
+  clearAdvanceTimer();
   const index = lessonIndex(id);
   if (!isUnlocked(index)) return;
   appMode = "lessons";
@@ -952,6 +974,7 @@ function selectLesson(id) {
 }
 
 function selectAnswer(index) {
+  if (celebrating) return;
   selectedAnswer = index;
   const lesson = currentLesson();
   const correct = index === lesson.quiz.answer;
@@ -960,6 +983,13 @@ function selectAnswer(index) {
   if (correct) {
     state.mastered[lesson.id] = true;
     feedback = { type: "good", text: lesson.quiz.good };
+    saveState();
+    scheduleAdvance(() => {
+      const currentIndex = lessonIndex(lesson.id);
+      if (currentIndex === lessons.length - 1) startPractice();
+      else goNext();
+    });
+    return;
   } else {
     state.mastered[lesson.id] = false;
     feedback = { type: "retry", text: lesson.quiz.retry };
@@ -969,6 +999,7 @@ function selectAnswer(index) {
 }
 
 function goNext() {
+  clearAdvanceTimer();
   const index = lessonIndex(state.current);
   const nextIndex = Math.min(index + 1, lessons.length - 1);
   state.current = lessons[nextIndex].id;
@@ -979,6 +1010,7 @@ function goNext() {
 }
 
 function revisit() {
+  clearAdvanceTimer();
   const index = lessonIndex(state.current);
   const earlier = lessons.slice(0, index).find((lesson) => !state.mastered[lesson.id]);
   state.current = (earlier || lessons[0]).id;
@@ -989,6 +1021,7 @@ function revisit() {
 }
 
 function resetProgress() {
+  clearAdvanceTimer();
   state = { current: lessons[0].id, mastered: {}, attempts: {} };
   selectedAnswer = null;
   feedback = null;
@@ -998,6 +1031,7 @@ function resetProgress() {
 }
 
 function startPractice(index = 0) {
+  clearAdvanceTimer();
   appMode = "practice";
   practiceState = {
     index,
@@ -1008,6 +1042,7 @@ function startPractice(index = 0) {
 }
 
 function selectPracticeScenario(index) {
+  clearAdvanceTimer();
   appMode = "practice";
   practiceState.index = Math.max(0, Math.min(index, practiceScenarios.length - 1));
   practiceState.selectedCard = null;
@@ -1016,6 +1051,7 @@ function selectPracticeScenario(index) {
 }
 
 function backToLessons() {
+  clearAdvanceTimer();
   appMode = "lessons";
   practiceState.selectedCard = null;
   practiceState.feedback = null;
@@ -1023,6 +1059,7 @@ function backToLessons() {
 }
 
 function selectPracticeCard(rank, suit) {
+  if (celebrating) return;
   const scenario = practiceScenarios[practiceState.index];
   if (scenario.type === "call") return;
   const card = [rank, suit];
@@ -1039,16 +1076,19 @@ function selectPracticeCard(rank, suit) {
       type: "good",
       text: scenario.explanation
     };
+    scheduleAdvance(nextPracticeScenario);
+    return;
   } else {
     practiceState.feedback = {
       type: "retry",
-      text: "That card is legal, but try the highlighted card that best matches this beginner drill."
+      text: "That card is legal, but there is a better beginner play here. Use the feedback and table state to try again."
     };
   }
   render();
 }
 
 function selectPracticeTrump(suit) {
+  if (celebrating) return;
   const scenario = practiceScenarios[practiceState.index];
   if (scenario.type !== "call") return;
   practiceState.selectedCard = [suit, "trump-call"];
@@ -1058,6 +1098,8 @@ function selectPracticeTrump(suit) {
       type: "good",
       text: scenario.explanation
     };
+    scheduleAdvance(nextPracticeScenario);
+    return;
   } else if (suit === scenario.passedSuit) {
     practiceState.feedback = {
       type: "retry",
@@ -1073,6 +1115,7 @@ function selectPracticeTrump(suit) {
 }
 
 function nextPracticeScenario() {
+  clearAdvanceTimer();
   practiceState.index = (practiceState.index + 1) % practiceScenarios.length;
   practiceState.selectedCard = null;
   practiceState.feedback = null;
@@ -1379,12 +1422,10 @@ function renderPracticeHand(position, cards, scenario) {
   return `
     <div class="practice-hand ${position === "you" ? "user-practice-hand" : ""}">
       ${cards.map((card) => {
-        const legal = position === "you" && isLegalPracticeCard(card, scenario);
         const selected = position === "you" && sameCard(card, practiceState.selectedCard);
-        const correct = position === "you" && sameCard(card, scenario.answer);
-        const disabled = position !== "you" || practiceState.feedback?.type === "good";
+        const disabled = position !== "you" || practiceState.feedback?.type === "good" || celebrating;
         return position === "you"
-          ? `<button class="practice-card-choice ${legal ? "legal" : "illegal"} ${selected ? "selected" : ""} ${correct ? "target-card" : ""}" onclick="selectPracticeCard('${card[0]}', '${card[1]}')" ${disabled ? "disabled" : ""}>${cardHtml(card, { small: true })}</button>`
+          ? `<button class="practice-card-choice ${selected ? "selected" : ""}" onclick="selectPracticeCard('${card[0]}', '${card[1]}')" ${disabled ? "disabled" : ""}>${cardHtml(card, { small: true })}</button>`
           : `<div class="practice-card-static">${cardHtml(["", "card-back"], { small: true })}</div>`;
       }).join("")}
     </div>
@@ -1395,7 +1436,7 @@ function renderPracticeCallHand(cards) {
   return `
     <div class="practice-hand user-practice-hand">
       ${cards.map((card) => `
-        <button class="practice-card-choice legal" disabled>
+        <button class="practice-card-choice" disabled>
           ${cardHtml(card, { small: true })}
         </button>
       `).join("")}
@@ -1519,15 +1560,25 @@ function renderPractice() {
             `).join("")}
           </section>
           ${isCallPractice ? renderTrumpCallOptions(scenario) : ""}
+          ${celebrating ? renderCelebration("Nice work", "Next one coming up...") : ""}
           <div class="feedback ${feedback ? feedback.type : ""}">
-            ${feedback ? colorizeRedCards(feedback.text) : isCallPractice ? "Choose the trump suit that best fits your hand. The turned-down suit is not available." : "Choose from your hand. Legal cards have a green glow."}
+            ${feedback ? colorizeRedCards(feedback.text) : isCallPractice ? "Choose the trump suit that best fits your hand. The turned-down suit is not available." : "Choose from your hand. The feedback will coach the decision after you try."}
           </div>
           <div class="actions">
-            <button class="primary-button" onclick="nextPracticeScenario()" ${completed ? "" : "disabled"}>${practiceState.index === practiceScenarios.length - 1 ? "Restart Practice" : "Next Practice Trick"}</button>
-            <button class="secondary-button" onclick="backToLessons()">Back To Lessons</button>
+            <button class="primary-button" onclick="nextPracticeScenario()" ${completed && !celebrating ? "" : "disabled"}>${celebrating ? "Moving On..." : practiceState.index === practiceScenarios.length - 1 ? "Restart Practice" : "Next Practice Trick"}</button>
+            <button class="secondary-button" onclick="backToLessons()" ${celebrating ? "disabled" : ""}>Back To Lessons</button>
           </div>
         </main>
       </div>
+    </div>
+  `;
+}
+
+function renderCelebration(title, message) {
+  return `
+    <div class="celebration" role="status" aria-live="polite">
+      <strong>${title}</strong>
+      <span>${message}</span>
     </div>
   `;
 }
@@ -1641,12 +1692,13 @@ function renderLesson(lesson) {
         <div class="feedback ${feedback ? feedback.type : ""}">
           ${feedback ? colorizeRedCards(feedback.text) : "Pick an answer when you feel ready. You can revisit this lesson as often as needed."}
         </div>
+        ${celebrating ? renderCelebration("Got it", isLastLesson ? "Practice hands are next..." : "Next lesson coming up...") : ""}
         <div class="actions">
-          <button class="primary-button" onclick="${isLastLesson ? "startPractice()" : "goNext()"}" ${canContinue || canStartPractice ? "" : "disabled"}>
-            ${isLastLesson ? "All Set" : "Continue"}
+          <button class="primary-button" onclick="${isLastLesson ? "startPractice()" : "goNext()"}" ${(canContinue || canStartPractice) && !celebrating ? "" : "disabled"}>
+            ${celebrating ? "Moving On..." : isLastLesson ? "All Set" : "Continue"}
           </button>
-          <button class="secondary-button" onclick="revisit()">Revisit Basics</button>
-          <button class="secondary-button" onclick="resetProgress()">Reset</button>
+          <button class="secondary-button" onclick="revisit()" ${celebrating ? "disabled" : ""}>Revisit Basics</button>
+          <button class="secondary-button" onclick="resetProgress()" ${celebrating ? "disabled" : ""}>Reset</button>
           <span class="mastery">${mastered ? "✓ Concept comfortable" : "○ Keep practicing"} · ${attempts} ${attempts === 1 ? "try" : "tries"}</span>
         </div>
         ${
