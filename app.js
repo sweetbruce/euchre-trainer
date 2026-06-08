@@ -914,6 +914,7 @@ let practiceState = {
   selectedCard: null,
   feedback: null
 };
+let gameState = null;
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1104,6 +1105,365 @@ function nextPracticeScenario() {
   practiceState.index = (practiceState.index + 1) % practiceScenarios.length;
   practiceState.selectedCard = null;
   practiceState.feedback = null;
+  render();
+}
+
+const tablePlayers = ["left-opponent", "partner", "right-opponent", "you"];
+const nextPlayer = {
+  "left-opponent": "partner",
+  partner: "right-opponent",
+  "right-opponent": "you",
+  you: "left-opponent"
+};
+const previousPlayer = {
+  "left-opponent": "you",
+  partner: "left-opponent",
+  "right-opponent": "partner",
+  you: "right-opponent"
+};
+const euchreRanks = ["9", "10", "J", "Q", "K", "A"];
+const rankPower = { "9": 1, "10": 2, J: 3, Q: 4, K: 5, A: 6 };
+
+function teamOf(player) {
+  return player === "you" || player === "partner" ? "us" : "them";
+}
+
+function teamName(team) {
+  return team === "us" ? "You + Partner" : "Opponents";
+}
+
+function createDeck() {
+  return ["hearts", "diamonds", "clubs", "spades"].flatMap((suit) => euchreRanks.map((rank) => [rank, suit]));
+}
+
+function shuffle(cards) {
+  const deck = cards.map((card) => [...card]);
+  for (let index = deck.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [deck[index], deck[swapIndex]] = [deck[swapIndex], deck[index]];
+  }
+  return deck;
+}
+
+function cardScoreForSuit(card, suit) {
+  if (card[0] === "J" && card[1] === suit) return 12;
+  if (card[0] === "J" && card[1] === sameColorSuit(suit)) return 10;
+  if (card[1] !== suit) return rankPower[card[0]] * 0.25;
+  return { A: 7, K: 5, Q: 4, "10": 2, "9": 1, J: 0 }[card[0]] || 0;
+}
+
+function handScoreForSuit(hand, suit) {
+  return hand.reduce((total, card) => total + cardScoreForSuit(card, suit), 0);
+}
+
+function lowestCardForTrump(hand, trump) {
+  return [...hand].sort((a, b) => cardPower(a, trump, effectiveSuit(a, trump)) - cardPower(b, trump, effectiveSuit(b, trump)))[0];
+}
+
+function removeCardFromHand(hand, card) {
+  const index = hand.findIndex((item) => sameCard(item, card));
+  if (index >= 0) hand.splice(index, 1);
+}
+
+function dealCards() {
+  const deck = shuffle(createDeck());
+  const hands = {
+    partner: [],
+    "right-opponent": [],
+    you: [],
+    "left-opponent": []
+  };
+  for (let round = 0; round < 5; round += 1) {
+    tablePlayers.forEach((player) => hands[player].push(deck.pop()));
+  }
+  return {
+    hands,
+    upcard: deck.pop(),
+    kitty: deck
+  };
+}
+
+function startGame() {
+  clearAdvanceTimer();
+  appMode = "game";
+  gameState = {
+    score: { us: 0, them: 0 },
+    dealer: "you",
+    handNumber: 0,
+    peek: false,
+    message: "New game. First team to 10 wins.",
+    hand: null
+  };
+  dealNextGameHand(false);
+}
+
+function dealNextGameHand(rotateDealer = true) {
+  if (!gameState) startGame();
+  if (rotateDealer) gameState.dealer = nextPlayer[gameState.dealer];
+  gameState.handNumber += 1;
+  const dealt = dealCards();
+  gameState.hand = {
+    ...dealt,
+    dealer: gameState.dealer,
+    phase: "bidding",
+    biddingRound: 1,
+    bidder: nextPlayer[gameState.dealer],
+    passedSuit: null,
+    passes: [],
+    trump: null,
+    maker: null,
+    makerTeam: null,
+    trickLead: null,
+    currentPlayer: null,
+    plays: [],
+    completedTricks: [],
+    trickNumber: 1,
+    tricks: { us: 0, them: 0 },
+    result: null
+  };
+  gameState.message = `${seatName(gameState.dealer)} deals. ${suitNames[gameState.hand.upcard[1]]} is the upcard suit.`;
+  advanceGameAi();
+  render();
+}
+
+function gameCallOptions() {
+  const hand = gameState.hand;
+  if (hand.biddingRound === 1) return [hand.upcard[1]];
+  return ["hearts", "diamonds", "clubs", "spades"].filter((suit) => suit !== hand.passedSuit);
+}
+
+function isDealerStuck() {
+  const hand = gameState.hand;
+  return hand.biddingRound === 2 && hand.bidder === hand.dealer && hand.passes.length >= 7;
+}
+
+function userPassGameCall() {
+  const hand = gameState.hand;
+  if (!hand || hand.phase !== "bidding" || hand.bidder !== "you") return;
+  if (isDealerStuck()) {
+    gameState.message = "Dealer must choose trump in round two.";
+    render();
+    return;
+  }
+  passGameBid("you");
+  advanceGameAi();
+  render();
+}
+
+function userCallGameTrump(suit) {
+  const hand = gameState.hand;
+  if (!hand || hand.phase !== "bidding" || hand.bidder !== "you") return;
+  if (!gameCallOptions().includes(suit)) return;
+  applyGameTrump("you", suit);
+  advanceGameAi();
+  render();
+}
+
+function passGameBid(player) {
+  const hand = gameState.hand;
+  hand.passes.push(player);
+  gameState.message = `${seatName(player)} passes.`;
+
+  if (hand.biddingRound === 1 && hand.passes.length === 4) {
+    hand.biddingRound = 2;
+    hand.passedSuit = hand.upcard[1];
+    hand.bidder = nextPlayer[hand.dealer];
+    gameState.message = `${suitNames[hand.passedSuit]} was turned down. Round two: choose a different suit.`;
+    return;
+  }
+
+  if (hand.biddingRound === 2 && hand.passes.length >= 8) {
+    const bestSuit = bestCallSuit(hand.hands[hand.dealer], hand.passedSuit);
+    applyGameTrump(hand.dealer, bestSuit);
+    return;
+  }
+
+  hand.bidder = nextPlayer[player];
+}
+
+function bestCallSuit(hand, blockedSuit = null) {
+  return ["hearts", "diamonds", "clubs", "spades"]
+    .filter((suit) => suit !== blockedSuit)
+    .sort((a, b) => handScoreForSuit(hand, b) - handScoreForSuit(hand, a))[0];
+}
+
+function aiBid(player) {
+  const hand = gameState.hand;
+  if (hand.biddingRound === 1) {
+    const suit = hand.upcard[1];
+    const score = handScoreForSuit(hand.hands[player], suit) + (player === hand.dealer ? 2 : 0);
+    if (score >= 15) return suit;
+    return null;
+  }
+
+  const bestSuit = bestCallSuit(hand.hands[player], hand.passedSuit);
+  const score = handScoreForSuit(hand.hands[player], bestSuit);
+  if (isDealerStuck() && player === hand.dealer) return bestSuit;
+  if (score >= 14) return bestSuit;
+  return null;
+}
+
+function applyGameTrump(caller, suit) {
+  const hand = gameState.hand;
+  hand.trump = suit;
+  hand.maker = caller;
+  hand.makerTeam = teamOf(caller);
+  hand.phase = "playing";
+  hand.trickLead = nextPlayer[hand.dealer];
+  hand.currentPlayer = hand.trickLead;
+  hand.plays = [];
+
+  if (hand.biddingRound === 1) {
+    hand.hands[hand.dealer].push(hand.upcard);
+    const discard = lowestCardForTrump(hand.hands[hand.dealer], suit);
+    removeCardFromHand(hand.hands[hand.dealer], discard);
+    gameState.message = `${seatName(caller)} ordered up ${suitNames[suit]}. Dealer picked up and discarded.`;
+  } else {
+    gameState.message = `${seatName(caller)} called ${suitNames[suit]}.`;
+  }
+}
+
+function advanceGameAi() {
+  let guard = 0;
+  while (gameState?.hand && guard < 80) {
+    guard += 1;
+    const hand = gameState.hand;
+    if (hand.phase === "bidding") {
+      if (hand.bidder === "you") return;
+      const call = aiBid(hand.bidder);
+      if (call) applyGameTrump(hand.bidder, call);
+      else passGameBid(hand.bidder);
+      continue;
+    }
+
+    if (hand.phase === "playing") {
+      if (hand.currentPlayer === "you") return;
+      playGameCard(hand.currentPlayer, chooseAiCard(hand.currentPlayer));
+      continue;
+    }
+
+    return;
+  }
+}
+
+function legalGameCards(player) {
+  const hand = gameState.hand;
+  const cards = hand.hands[player];
+  if (!hand.plays.length) return cards;
+  const ledSuit = effectiveSuit(hand.plays[0].card, hand.trump);
+  const matching = cards.filter((card) => effectiveSuit(card, hand.trump) === ledSuit);
+  return matching.length ? matching : cards;
+}
+
+function cardPower(card, trump, ledSuit) {
+  const suit = effectiveSuit(card, trump);
+  if (suit === trump) {
+    if (card[0] === "J" && card[1] === trump) return 200;
+    if (card[0] === "J" && card[1] === sameColorSuit(trump)) return 199;
+    return 150 + rankPower[card[0]];
+  }
+  if (suit === ledSuit) return 100 + rankPower[card[0]];
+  return rankPower[card[0]];
+}
+
+function chooseAiCard(player) {
+  const hand = gameState.hand;
+  const legal = legalGameCards(player);
+  const ledSuit = hand.plays[0] ? effectiveSuit(hand.plays[0].card, hand.trump) : effectiveSuit(legal[0], hand.trump);
+  const sorted = [...legal].sort((a, b) => cardPower(a, hand.trump, ledSuit) - cardPower(b, hand.trump, ledSuit));
+  const partnerWinning = currentTrickLeader()?.team === teamOf(player);
+  if (partnerWinning) return sorted[0];
+  return sorted[sorted.length - 1];
+}
+
+function currentTrickLeader() {
+  const hand = gameState.hand;
+  if (!hand?.plays.length) return null;
+  const ledSuit = effectiveSuit(hand.plays[0].card, hand.trump);
+  const best = [...hand.plays].sort((a, b) => cardPower(b.card, hand.trump, ledSuit) - cardPower(a.card, hand.trump, ledSuit))[0];
+  return { player: best.player, team: teamOf(best.player), card: best.card };
+}
+
+function userPlayGameCard(rank, suit) {
+  const hand = gameState.hand;
+  if (!hand || hand.phase !== "playing" || hand.currentPlayer !== "you") return;
+  const card = [rank, suit];
+  if (!legalGameCards("you").some((item) => sameCard(item, card))) {
+    const ledSuit = effectiveSuit(hand.plays[0].card, hand.trump);
+    gameState.message = `${suitNames[ledSuit]} was led, and you still have ${suitNames[ledSuit]}.`;
+    render();
+    return;
+  }
+  playGameCard("you", card);
+  advanceGameAi();
+  render();
+}
+
+function playGameCard(player, card) {
+  const hand = gameState.hand;
+  removeCardFromHand(hand.hands[player], card);
+  hand.plays.push({ player, card });
+  gameState.message = `${seatName(player)} played ${card[0]} ${suitNames[card[1]]}.`;
+
+  if (hand.plays.length === 4) {
+    resolveGameTrick();
+    return;
+  }
+
+  hand.currentPlayer = nextPlayer[player];
+}
+
+function resolveGameTrick() {
+  const hand = gameState.hand;
+  const ledSuit = effectiveSuit(hand.plays[0].card, hand.trump);
+  const winnerPlay = [...hand.plays].sort((a, b) => cardPower(b.card, hand.trump, ledSuit) - cardPower(a.card, hand.trump, ledSuit))[0];
+  const winnerTeam = teamOf(winnerPlay.player);
+  hand.tricks[winnerTeam] += 1;
+  hand.completedTricks.push({ winner: winnerPlay.player, plays: hand.plays.map((play) => ({ ...play })) });
+  gameState.message = `${seatName(winnerPlay.player)} wins trick ${hand.trickNumber}.`;
+
+  if (hand.trickNumber === 5) {
+    resolveGameHand();
+    return;
+  }
+
+  hand.trickNumber += 1;
+  hand.trickLead = winnerPlay.player;
+  hand.currentPlayer = winnerPlay.player;
+  hand.plays = [];
+}
+
+function resolveGameHand() {
+  const hand = gameState.hand;
+  const makerTricks = hand.tricks[hand.makerTeam];
+  let points = 0;
+  let scoringTeam = hand.makerTeam;
+  let resultText = "";
+
+  if (makerTricks >= 5) {
+    points = 2;
+    resultText = `${teamName(hand.makerTeam)} took all 5 tricks for 2 points.`;
+  } else if (makerTricks >= 3) {
+    points = 1;
+    resultText = `${teamName(hand.makerTeam)} made trump for 1 point.`;
+  } else {
+    points = 2;
+    scoringTeam = hand.makerTeam === "us" ? "them" : "us";
+    resultText = `${teamName(hand.makerTeam)} got euchred. ${teamName(scoringTeam)} scores 2.`;
+  }
+
+  gameState.score[scoringTeam] += points;
+  hand.phase = "hand-over";
+  hand.result = { points, scoringTeam, resultText, makerTricks };
+  gameState.message = resultText;
+  if (gameState.score.us >= 10 || gameState.score.them >= 10) {
+    hand.phase = "game-over";
+    gameState.message = `${teamName(gameState.score.us >= 10 ? "us" : "them")} win the game.`;
+  }
+}
+
+function toggleGamePeek() {
+  gameState.peek = !gameState.peek;
   render();
 }
 
@@ -1571,6 +1931,194 @@ function renderCelebration(title, message, actionLabel, action) {
   `;
 }
 
+function renderGameScoreStrip() {
+  return `
+    <section class="game-score-strip" aria-label="Game score">
+      ${renderTeamScore("You + Partner", gameState.score.us, "us", "hearts")}
+      ${renderTeamScore("Opponents", gameState.score.them, "them", "clubs")}
+    </section>
+  `;
+}
+
+function renderTeamScore(label, score, team, suit) {
+  return `
+    <div class="team-score ${team}">
+      <div>
+        <strong>${label}</strong>
+        <span>${score} / 10</span>
+      </div>
+      <div class="five-score-cards" aria-label="${label} score ${score}">
+        ${renderFiveScoreCard(Math.min(score, 5), suit)}
+        ${renderFiveScoreCard(Math.max(0, score - 5), suit)}
+      </div>
+    </div>
+  `;
+}
+
+function renderFiveScoreCard(count, suit) {
+  const red = suit === "hearts" || suit === "diamonds";
+  return `
+    <div class="score-five ${red ? "red" : "black"}">
+      <span class="rank">5</span>
+      ${[1, 2, 3, 4, 5].map((pip) => `<span class="score-pip pip-${pip} ${pip <= count ? "shown" : ""}">${suitSymbols[suit]}</span>`).join("")}
+    </div>
+  `;
+}
+
+function renderGameBoard() {
+  const hand = gameState.hand;
+  const positions = ["partner", "right-opponent", "you", "left-opponent"];
+  const isBidding = hand.phase === "bidding";
+  const showUpcard = isBidding && hand.biddingRound === 1;
+  const center = isBidding
+    ? showUpcard
+      ? `<div class="upcard-area"><span class="upcard-label">UPCARD</span>${cardHtml(hand.upcard, { small: true })}</div>`
+      : `<div class="round-mark"><span>2</span><small>round</small></div>`
+    : `<div class="trump-mark ${hand.trump === "hearts" || hand.trump === "diamonds" ? "red" : "black"}"><span>${suitSymbols[hand.trump]}</span><small>trump</small></div>`;
+
+  return `
+    <section class="practice-board game-board">
+      <div class="practice-meta">
+        <span>Hand ${gameState.handNumber}</span>
+        <span>${isBidding ? `Bidding round ${hand.biddingRound}` : `${suitNames[hand.trump]} trump`}</span>
+        <span>Trick ${Math.min(hand.trickNumber, 5)} of 5</span>
+      </div>
+      <div class="table-felt practice-felt game-felt">
+        ${center}
+        <div class="turn-direction" aria-hidden="true"><span>TURN</span></div>
+        ${positions.map((position) => {
+          const play = hand.plays.find((item) => item.player === position);
+          const isTurn = (hand.phase === "bidding" && hand.bidder === position) || (hand.phase === "playing" && hand.currentPlayer === position);
+          return `
+            <div class="table-seat ${position} ${isTurn ? "current-turn" : ""} ${position === hand.dealer ? "dealer-seat" : ""}">
+              ${cardHtml(play?.card || null, { small: true })}
+              <span class="${position === "you" ? "you-marker" : "seat-chip"}">${seatName(position)}</span>
+              ${position === hand.dealer ? `<span class="dealer-chip">DEALER</span>` : ""}
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderGameHandPanel() {
+  const hand = gameState.hand;
+  return `
+    <section class="visible-hands">
+      <div class="visible-hand-panel you-panel">
+        <div class="hand-panel-label">
+          <strong>YOU</strong>
+          <span>${hand.phase === "playing" && hand.currentPlayer === "you" ? "Choose a card" : "Your hand"}</span>
+        </div>
+        <div class="practice-hand user-practice-hand">
+          ${hand.hands.you.map((card) => {
+            const enabled = hand.phase === "playing" && hand.currentPlayer === "you";
+            return `<button class="practice-card-choice" onclick="userPlayGameCard('${card[0]}', '${card[1]}')" ${enabled ? "" : "disabled"}>${cardHtml(card, { small: true })}</button>`;
+          }).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderPeekPanel() {
+  if (!gameState.peek) return "";
+  const hand = gameState.hand;
+  return `
+    <section class="peek-panel">
+      <div class="hand-panel-label">
+        <strong>Training Peek</strong>
+        <span>You cannot see these hands in a real game.</span>
+      </div>
+      <div class="peek-grid">
+        ${["partner", "left-opponent", "right-opponent"].map((player) => `
+          <div>
+            <strong>${seatName(player)}</strong>
+            <div class="card-row compact">${hand.hands[player].map((card) => cardHtml(card, { small: true })).join("")}</div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderGameBiddingControls() {
+  const hand = gameState.hand;
+  if (hand.phase !== "bidding" || hand.bidder !== "you") return "";
+  const stuck = isDealerStuck();
+  return `
+    <section class="game-controls">
+      <p class="quiz-question">${stuck ? "You are the dealer, and round two reached you. Choose trump." : "Your turn to call trump or pass."}</p>
+      <div class="trump-call-options">
+        ${gameCallOptions().map((suit) => `
+          <button class="answer-button trump-call-button" onclick="userCallGameTrump('${suit}')">
+            <span class="${suit === "hearts" || suit === "diamonds" ? "red-card-text" : ""}">${suitNames[suit]} ${suitSymbols[suit]}</span>
+          </button>
+        `).join("")}
+        ${stuck ? "" : `<button class="secondary-button" onclick="userPassGameCall()">Pass</button>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderHandResultPanel() {
+  const hand = gameState.hand;
+  if (!["hand-over", "game-over"].includes(hand.phase)) return "";
+  return `
+    <section class="hand-result">
+      <p class="eyebrow">${hand.phase === "game-over" ? "Game Over" : "Hand Complete"}</p>
+      <h3>${hand.phase === "game-over" ? gameState.message : hand.result.resultText}</h3>
+      <div class="mini-table">
+        <div class="fact-tile"><strong>Makers</strong><span>${teamName(hand.makerTeam)}</span></div>
+        <div class="fact-tile"><strong>Tricks</strong><span>${hand.tricks.us} us · ${hand.tricks.them} opponents</span></div>
+        <div class="fact-tile"><strong>Score</strong><span>${gameState.score.us} - ${gameState.score.them}</span></div>
+      </div>
+      <div class="actions">
+        ${hand.phase === "game-over" ? `<button class="primary-button" onclick="startGame()">New Game</button>` : `<button class="primary-button" onclick="dealNextGameHand()">Deal Next Hand</button>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderGame() {
+  if (!gameState) startGame();
+  const hand = gameState.hand;
+  return `
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="sigil" aria-hidden="true">☾</div>
+          <div>
+            <h1>Play a Game</h1>
+            <p class="subtitle">A real dealt game to 10 with simple computer players.</p>
+          </div>
+        </div>
+      </header>
+      <div class="layout">
+        <nav class="lesson-nav" aria-label="Navigation">
+          ${renderNav()}
+        </nav>
+        <main class="practice-shell game-shell">
+          ${renderGameScoreStrip()}
+          ${renderGameBoard()}
+          <div class="game-toolbar">
+            <button class="secondary-button" onclick="toggleGamePeek()">${gameState.peek ? "Hide Peek" : "Peek"}</button>
+            <button class="secondary-button" onclick="startGame()">New Game</button>
+          </div>
+          ${renderGameBiddingControls()}
+          ${renderGameHandPanel()}
+          ${renderPeekPanel()}
+          <div class="feedback ${hand.phase === "game-over" ? "good" : ""}">
+            ${colorizeRedCards(gameState.message)}
+          </div>
+          ${renderHandResultPanel()}
+        </main>
+      </div>
+    </div>
+  `;
+}
+
 function renderNav() {
   const lessonButtons = lessons
     .map((lesson, index) => {
@@ -1617,6 +2165,20 @@ function renderNav() {
     <div class="nav-section">
       <p class="nav-section-title">Practice Hands</p>
       <div class="nav-scroll">${practiceButtons}</div>
+    </div>
+    <div class="nav-section">
+      <p class="nav-section-title">Play a Game</p>
+      <div class="nav-scroll">
+        <button
+          class="lesson-button practice-nav-button ${appMode === "game" ? "active" : ""}"
+          onclick="startGame()"
+          aria-current="${appMode === "game" ? "step" : "false"}"
+        >
+          <span class="lesson-number">10</span>
+          <span class="lesson-name">First To 10</span>
+          <span class="lesson-status">game</span>
+        </button>
+      </div>
     </div>
   `;
 }
@@ -1700,6 +2262,11 @@ function renderLesson(lesson) {
 }
 
 function render() {
+  if (appMode === "game") {
+    document.getElementById("app").innerHTML = renderGame();
+    return;
+  }
+
   if (appMode === "practice") {
     document.getElementById("app").innerHTML = renderPractice();
     return;
@@ -1740,6 +2307,7 @@ function render() {
 
 Object.assign(window, {
   backToLessons,
+  dealNextGameHand,
   goNext,
   nextPracticeScenario,
   revisit,
@@ -1749,7 +2317,12 @@ Object.assign(window, {
   selectPracticeCard,
   selectPracticeScenario,
   selectPracticeTrump,
-  startPractice
+  startGame,
+  startPractice,
+  toggleGamePeek,
+  userCallGameTrump,
+  userPassGameCall,
+  userPlayGameCard
 });
 
 render();
